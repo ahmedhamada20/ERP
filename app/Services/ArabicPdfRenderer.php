@@ -27,6 +27,11 @@ class ArabicPdfRenderer
 
         $fontData = (new FontVariables())->getDefaults()['fontdata'];
 
+        // mPDF concatenates fontDir entries with the TTF filename directly,
+        // so the directory MUST end with a separator AND use forward slashes
+        // (mixed separators on Windows can defeat mPDF's path resolution).
+        $cairoDir = str_replace('\\', '/', public_path('fonts/cairo')) . '/';
+
         $mpdf = new Mpdf([
             'mode'             => 'utf-8',
             'format'           => $opts['paper'] ?? 'A4',
@@ -38,7 +43,7 @@ class ArabicPdfRenderer
             'margin_header'    => 6,
             'margin_footer'    => 6,
             'tempDir'          => storage_path('app/mpdf-tmp'),
-            'fontDir'          => array_merge($fontDirs, [public_path('fonts/cairo')]),
+            'fontDir'          => array_merge($fontDirs, [$cairoDir]),
             'fontdata'         => $fontData + [
                 'cairo' => [
                     'R'          => 'Cairo-Regular.ttf',
