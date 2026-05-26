@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//d/jops/CoreXSolution/**)",
+      "PowerShell(Get-Process | Where-Object { $_.Name -match \"mysql|laragon|httpd|nginx\" } | Select-Object Name, Id | Format-Table -AutoSize; Write-Output \"---Services---\"; Get-Service | Where-Object { $_.Name -match \"mysql|MariaDB\" } | Select-Object Name, Status | Format-Table -AutoSize)",
+      "PowerShell($p = Start-Process -FilePath \"C:\\\\laragon\\\\bin\\\\mysql\\\\mysql-5.7.39-winx64\\\\bin\\\\mysqld.exe\" -ArgumentList \"--console\" -PassThru -WindowStyle Hidden; Write-Output \\(\"Started PID: \" + $p.Id\\); Start-Sleep -Seconds 6; if \\($p.HasExited\\) { Write-Output \\(\"Process exited with code: \" + $p.ExitCode\\) } else { Write-Output \"Process still running\" }; Get-Process mysqld -ErrorAction SilentlyContinue | Select-Object Name, Id | Format-Table -AutoSize)",
+      "Bash(curl -sb /tmp/corex_cookies.txt \"http://127.0.0.1:8000/admin/customers/data?draw=1&start=0&length=10\" -o /tmp/dt.json -w \"HTTP: %{http_code}\\\\n\")",
+      "Bash(sleep 4 && \\\\ *)",
+      "Bash(awk '/class=\"topbar\"/,/<\\\\/script>/' /tmp/dash.html)",
+      "Bash(php -l app/Http/Controllers/Admin/ReligiousBookingController.php)",
+      "Bash(php -l app/Http/Controllers/Admin/BookingPilgrimController.php)",
+      "Bash(php -l app/Http/Controllers/Admin/BookingCostController.php)",
+      "Bash(php -l app/Http/Controllers/Admin/BookingPaymentController.php)",
+      "Bash(php -l app/Http/Controllers/Admin/BookingAccommodationController.php)",
+      "Bash(php -l app/Services/ExchangeRateService.php)",
+      "Bash(php -l app/Console/Commands/SyncExchangeRatesCommand.php)",
+      "Bash(php -l app/Http/Controllers/Admin/ExchangeRateController.php)",
+      "Bash(Get-ChildItem -Path \"D:\\\\jops\\\\CoreXSolution\\\\ERP\" -Directory)",
+      "Bash(php -l app/Http/Controllers/Admin/Hr/DepartmentController.php)",
+      "Bash(php -l app/Http/Requests/Admin/DepartmentRequest.php)",
+      "Bash(Get-ChildItem -Path \"d:\\\\jops\\\\CoreXSolution\\\\ERP\" -Recurse -Filter \"*.php\")",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Get-ChildItem -Path \"d:\\\\jops\\\\CoreXSolution\\\\ERP\" -Directory)",
+      "Bash(php -r \"echo date\\('Y_m_d_His'\\);\")",
+      "PowerShell(php artisan migrate --path=database/migrations/2026_06_03_100001_create_sequences_table.php)",
+      "PowerShell(php artisan test --filter='PaymentValidationTest|DomesticPaymentValidationTest|BookingPaymentAutoPostTest|DomesticBookingPaymentAutoPostTest' 2>&1)",
+      "PowerShell(php artisan test --filter='PaymentValidationTest|DomesticPaymentValidationTest' 2>&1)",
+      "PowerShell(php artisan migrate --path=database/migrations/2026_06_03_100004_backfill_sequences_for_remaining_models.php)",
+      "PowerShell(php artisan migrate --path=database/migrations/2026_06_03_100007_backfill_customer_and_master_sequences.php)"
+    ],
+    "additionalDirectories": [
+      "\\tmp"
+    ]
+  }
+}

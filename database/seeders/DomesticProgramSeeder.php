@@ -1,0 +1,151 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\DomesticProgram;
+use Illuminate\Database\Seeder;
+
+/**
+ * Demo domestic programs — قوالب جاهزة للبرامج الأكثر طلباً في مصر.
+ * Idempotent via updateOrCreate keyed on code.
+ */
+class DomesticProgramSeeder extends Seeder
+{
+    public function run(): void
+    {
+        $programs = [
+            [
+                'code'                        => 'DOM-2026-0001',
+                'name'                        => 'باكدج الغردقة 5 نجوم - 5 أيام',
+                'name_en'                     => 'Hurghada 5 Stars Package - 5 Days',
+                'type'                        => 'package',
+                'season'                      => '2026-Summer',
+                'destination_country'         => 'Egypt',
+                'destination_city'            => 'الغردقة',
+                'destination_area'            => 'السهل',
+                'duration_days'               => 5,
+                'duration_nights'             => 4,
+                'default_accommodation_grade' => '5_stars',
+                'default_transport_type'      => 'private_car',
+                'default_meal_plan'           => 'ai',
+                'base_price_per_person'       => 8500,
+                'min_guests'                  => 1,
+                'max_guests'                  => 60,
+                'inclusions'                  => "النقل من وإلى المطار/الفندق\nالإقامة بفندق 5 نجوم على البحر\nنظام شامل All-Inclusive\nاستخدام المسبح والشاطئ\nالإشراف طوال الرحلة",
+                'exclusions'                  => "الرحلات الإضافية (سفاري / غوص)\nالإكراميات\nالمشتروات الشخصية",
+                'is_active'                   => true,
+                'is_published'                => true,
+            ],
+            [
+                'code'                        => 'DOM-2026-0002',
+                'name'                        => 'باكدج شرم الشيخ 4 نجوم - 4 أيام',
+                'name_en'                     => 'Sharm El-Sheikh 4 Stars Package - 4 Days',
+                'type'                        => 'package',
+                'season'                      => '2026-Summer',
+                'destination_country'         => 'Egypt',
+                'destination_city'            => 'شرم الشيخ',
+                'destination_area'            => 'نعمة باي',
+                'duration_days'               => 4,
+                'duration_nights'             => 3,
+                'default_accommodation_grade' => '4_stars',
+                'default_transport_type'      => 'flight',
+                'default_meal_plan'           => 'hb',
+                'base_price_per_person'       => 6500,
+                'min_guests'                  => 1,
+                'max_guests'                  => 80,
+                'inclusions'                  => "تذاكر الطيران الداخلي\nنقل من وإلى المطار\nإقامة 4 نجوم\nإفطار وعشاء\nمشرف ميداني",
+                'is_active'                   => true,
+                'is_published'                => true,
+            ],
+            [
+                'code'                        => 'DOM-2026-0003',
+                'name'                        => 'الإسكندرية - رحلة العائلة 3 أيام',
+                'name_en'                     => 'Alexandria Family Trip - 3 Days',
+                'type'                        => 'package',
+                'season'                      => '2026-Summer',
+                'destination_country'         => 'Egypt',
+                'destination_city'            => 'الإسكندرية',
+                'destination_area'            => 'الشاطبي',
+                'duration_days'               => 3,
+                'duration_nights'             => 2,
+                'default_accommodation_grade' => '4_stars',
+                'default_transport_type'      => 'bus',
+                'default_meal_plan'           => 'bb',
+                'base_price_per_person'       => 3200,
+                'min_guests'                  => 4,
+                'max_guests'                  => 45,
+                'inclusions'                  => "أتوبيس فاخر مكيف\nفندق 4 نجوم على الكورنيش\nالإفطار\nجولة في قلعة قايتباي ومكتبة الإسكندرية",
+                'is_active'                   => true,
+                'is_published'                => true,
+            ],
+            [
+                'code'                        => 'DOM-2026-0004',
+                'name'                        => 'رحلة نيلية الأقصر-أسوان 5 ليالٍ',
+                'name_en'                     => 'Luxor-Aswan Nile Cruise - 5 Nights',
+                'type'                        => 'cruise',
+                'season'                      => '2026-Winter',
+                'destination_country'         => 'Egypt',
+                'destination_city'            => 'الأقصر',
+                'destination_area'            => 'الأقصر / أسوان',
+                'duration_days'               => 6,
+                'duration_nights'             => 5,
+                'default_accommodation_grade' => '5_stars',
+                'default_transport_type'      => 'flight',
+                'default_meal_plan'           => 'fb',
+                'base_price_per_person'       => 12500,
+                'min_guests'                  => 2,
+                'max_guests'                  => 40,
+                'inclusions'                  => "رحلة بحرية 5 نجوم\nطيران داخلي ذهاب وعودة\nجميع الوجبات على الباخرة\nالزيارات الأثرية مع مرشد\nتأمين السفر",
+                'exclusions'                  => "تذاكر الدخول للمواقع الأثرية\nالمشروبات الكحولية",
+                'is_active'                   => true,
+                'is_published'                => true,
+            ],
+            [
+                'code'                        => 'DOM-2026-0005',
+                'name'                        => 'مخيم رأس شيطان - عطلة نهاية الأسبوع',
+                'name_en'                     => 'Ras Shetan Camp Weekend',
+                'type'                        => 'camp',
+                'season'                      => '2026-Spring',
+                'destination_country'         => 'Egypt',
+                'destination_city'            => 'نويبع',
+                'destination_area'            => 'رأس شيطان',
+                'duration_days'               => 3,
+                'duration_nights'             => 2,
+                'default_accommodation_grade' => 'economy',
+                'default_transport_type'      => 'minivan',
+                'default_meal_plan'           => 'hb',
+                'base_price_per_person'       => 2200,
+                'min_guests'                  => 6,
+                'max_guests'                  => 25,
+                'inclusions'                  => "النقل بميكروباص خاص\nخيمة على البحر مباشرة\nإفطار وعشاء بدوي\nبرنامج موسيقي مسائي",
+                'is_active'                   => true,
+                'is_published'                => true,
+            ],
+            [
+                'code'                        => 'DOM-2026-0006',
+                'name'                        => 'إقامة فندقية فاخرة - السخنة',
+                'name_en'                     => 'El Sokhna Luxury Hotel Stay',
+                'type'                        => 'hotel_only',
+                'season'                      => '2026-Summer',
+                'destination_country'         => 'Egypt',
+                'destination_city'            => 'السخنة',
+                'duration_days'               => 2,
+                'duration_nights'             => 1,
+                'default_accommodation_grade' => 'resort',
+                'default_transport_type'      => 'none',
+                'default_meal_plan'           => 'ai',
+                'base_price_per_person'       => 4500,
+                'min_guests'                  => 1,
+                'max_guests'                  => 100,
+                'inclusions'                  => "إقامة فاخرة بمنتجع\nنظام شامل\nاستخدام جميع مرافق المنتجع",
+                'exclusions'                  => "النقل من القاهرة\nالأنشطة المائية",
+                'is_active'                   => true,
+                'is_published'                => false,
+            ],
+        ];
+
+        foreach ($programs as $row) {
+            DomesticProgram::updateOrCreate(['code' => $row['code']], $row);
+        }
+    }
+}
