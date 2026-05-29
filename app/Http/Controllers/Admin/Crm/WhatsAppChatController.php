@@ -123,12 +123,13 @@ class WhatsAppChatController extends Controller
                     default                          => 'document',
                 };
 
-                $stored    = $file->store('whatsapp', 'public');
-                $publicUrl = Storage::disk('public')->url($stored);
-                $absolute  = Storage::disk('public')->path($stored);
+                $stored   = $file->store('whatsapp', 'public');
+                $absolute = Storage::disk('public')->path($stored);
 
+                // Store the RELATIVE path (not an APP_URL-based absolute URL) so
+                // media renders correctly regardless of host/APP_URL config.
                 $message = $this->whatsapp->sendMedia(
-                    $data['to_phone'], $type, $absolute, $mime, $publicUrl,
+                    $data['to_phone'], $type, $absolute, $mime, $stored,
                     $data['body'] ?? null, $file->getClientOriginalName(),
                 );
             } else {
@@ -154,7 +155,7 @@ class WhatsAppChatController extends Controller
             'direction'      => $m->direction,
             'type'           => $m->message_type,
             'body'           => $m->body,
-            'media_url'      => $m->media_url,
+            'media_url'      => $this->mediaWebUrl($m->media_url),
             'media_mime'     => $m->media_mime,
             'media_filename' => $m->media_filename,
             'template_name'  => $m->template_name,
@@ -165,6 +166,23 @@ class WhatsAppChatController extends Controller
             'time'           => optional($m->created_at)->format('H:i'),
             'date'           => optional($m->created_at)->format('Y-m-d'),
         ];
+    }
+
+    /**
+     * يبني رابطاً جذرياً (/storage/...) للوسائط مستقلاً عن APP_URL/الدومين.
+     * يصلّح أيضاً الصفوف القديمة المخزّنة كرابط مطلق خاطئ (مثل http://localhost/storage/..).
+     */
+    private function mediaWebUrl(?string $path): ?string
+    {
+        if (empty($path)) {
+            return null;
+        }
+        // رابط مطلق قديم: استخرج جزء /storage/ منه فقط.
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            $pos = strpos($path, '/storage/');
+            return $pos !== false ? substr($path, $pos) : $path;
+        }
+        return '/storage/' . ltrim($path, '/');
     }
 
     /** نص معاينة قصير لقائمة المحادثات. */

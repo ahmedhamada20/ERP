@@ -294,7 +294,9 @@ class WhatsAppMessageController extends Controller
         $path = 'whatsapp/in/' . $mediaId . ($ext ? '.' . $ext : '');
         Storage::disk('public')->put($path, $bytes);
 
-        return Storage::disk('public')->url($path);
+        // Store the RELATIVE path; the chat controller builds a host-independent
+        // /storage/... URL at display time (avoids baking APP_URL into the DB).
+        return $path;
     }
 
     /** Best-effort extension from a mime type. */
