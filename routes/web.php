@@ -33,6 +33,7 @@ use App\Http\Controllers\Admin\DomesticReportController;
 use App\Http\Controllers\Admin\Crm\LeadActivityController;
 use App\Http\Controllers\Admin\Crm\LeadController;
 use App\Http\Controllers\Admin\Crm\OpportunityController;
+use App\Http\Controllers\Admin\Crm\WhatsAppChatController;
 use App\Http\Controllers\Admin\Crm\WhatsAppMessageController;
 use App\Http\Controllers\Admin\Crm\WhatsAppSettingController;
 use App\Http\Controllers\Admin\ExchangeRateController;
@@ -468,9 +469,16 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
             Route::get('whatsapp/messages/data', [WhatsAppMessageController::class, 'data'])->name('whatsapp.messages.data');
             Route::get('whatsapp/messages',      [WhatsAppMessageController::class, 'index'])->name('whatsapp.messages.index');
             Route::get('whatsapp/messages/{message}', [WhatsAppMessageController::class, 'show'])->name('whatsapp.messages.show');
+
+            // Chat (WhatsApp-style conversation UI)
+            Route::get('whatsapp/chat', [WhatsAppChatController::class, 'index'])->name('whatsapp.chat.index');
+            Route::get('whatsapp/chat/conversations', [WhatsAppChatController::class, 'conversations'])->name('whatsapp.chat.conversations');
+            Route::get('whatsapp/chat/thread/{phone}', [WhatsAppChatController::class, 'thread'])
+                ->where('phone', '[0-9]+')->name('whatsapp.chat.thread');
         });
         Route::middleware('permission:whatsapp.send')->group(function () {
             Route::post('whatsapp/messages/send', [WhatsAppMessageController::class, 'send'])->name('whatsapp.messages.send');
+            Route::post('whatsapp/chat/send', [WhatsAppChatController::class, 'send'])->name('whatsapp.chat.send');
         });
     });
 

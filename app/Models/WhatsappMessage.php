@@ -44,12 +44,12 @@ class WhatsappMessage extends Model
     ];
 
     protected $fillable = [
-        'to_phone', 'from_phone', 'direction',
+        'to_phone', 'from_phone', 'contact_phone', 'direction',
         'message_type', 'template_name', 'template_params',
-        'body', 'media_url',
+        'body', 'media_url', 'media_mime', 'media_filename', 'media_id',
         'status', 'error_code', 'error_message', 'whatsapp_message_id',
         'related_type', 'related_id',
-        'sent_at', 'delivered_at', 'read_at', 'failed_at',
+        'sent_at', 'delivered_at', 'read_at', 'failed_at', 'agent_read_at',
         'created_by',
     ];
 
@@ -59,6 +59,7 @@ class WhatsappMessage extends Model
         'delivered_at'    => 'datetime',
         'read_at'         => 'datetime',
         'failed_at'       => 'datetime',
+        'agent_read_at'   => 'datetime',
     ];
 
     /** Mirror DB defaults so label accessors don't crash on fresh models. */
@@ -73,6 +74,12 @@ class WhatsappMessage extends Model
         static::creating(function (WhatsappMessage $msg) {
             if (auth()->check() && empty($msg->created_by)) {
                 $msg->created_by = auth()->id();
+            }
+            // Group key for the chat view: the OTHER party's number.
+            if (empty($msg->contact_phone)) {
+                $msg->contact_phone = $msg->direction === 'inbound'
+                    ? $msg->from_phone
+                    : $msg->to_phone;
             }
         });
     }
@@ -111,4 +118,32 @@ class WhatsappMessage extends Model
     public function scopeInbound($query)  { return $query->where('direction', 'inbound'); }
     public function scopeFailed($query)   { return $query->where('status', 'failed'); }
     public function scopePending($query)  { return $query->whereIn('status', ['queued', 'sent']); }
+
+    /** Messages exchanged with one phone number, oldest first (a conversation). */
+    public function scopeConversation($query, string $phone)
+    {
+        return $query->where('contact_phone', $phone)->orderBy('created_at');
+    }
+
+    /** True if this message carries downloadable/displayable media. */
+    public function hasMedia(): bool
+    {
+        return in_array($this->message_type, ['image', 'audio', 'video', 'document'], true)
+            && ! empty($this->media_url);
+    }
+
+    /**
+     * Meta's 24h Customer Service Window: free-form text/media may only be
+     * sent within 24h of the customer's last INBOUND message. Outside it you
+     * must use an approved template. Returns true if the window is open.
+     */
+    public static function windowOpenFor(string $phone): bool
+    {
+        $lastInbound = static::where('contact_phone', $phone)
+            ->where('direction', 'inbound')
+            ->latest('created_at')
+            ->value('created_at');
+
+        return $lastInbound !== null && $lastInbound->gt(now()->subDay());
+    }
 }

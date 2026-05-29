@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Throwable;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -243,15 +244,74 @@ class WhatsAppMessageController extends Controller
             return;
         }
 
-        WhatsappMessage::create([
+        $type = $m['type'] ?? 'text';
+
+        $attrs = [
             'to_phone'            => $metadata['display_phone_number'] ?? '',
             'from_phone'          => $m['from'] ?? '',
             'direction'           => 'inbound',
-            'message_type'        => $m['type'] ?? 'text',
-            'body'                => $m['text']['body'] ?? json_encode($m, JSON_UNESCAPED_UNICODE),
+            'message_type'        => $type,
             'status'              => 'delivered',
             'whatsapp_message_id' => $m['id'] ?? null,
             'delivered_at'        => now(),
-        ]);
+        ];
+
+        if ($type === 'text') {
+            $attrs['body'] = $m['text']['body'] ?? '';
+        } elseif (in_array($type, ['image', 'audio', 'video', 'document'], true) && isset($m[$type]['id'])) {
+            $media = $m[$type];
+            $attrs['body']           = $media['caption'] ?? null;
+            $attrs['media_id']       = $media['id'];
+            $attrs['media_mime']     = $media['mime_type'] ?? null;
+            $attrs['media_filename'] = $media['filename'] ?? null;
+            $attrs['media_url']      = $this->downloadInboundMedia($media['id'], $media['mime_type'] ?? null);
+        } else {
+            // interactive / location / contacts / unknown — keep raw for reference
+            $attrs['body'] = json_encode($m, JSON_UNESCAPED_UNICODE);
+        }
+
+        WhatsappMessage::create($attrs);
+    }
+
+    /**
+     * Resolve + download an inbound media id from Meta and store it locally.
+     * Returns the public URL of our stored copy, or null on failure (the
+     * message is still saved; media just won't render).
+     */
+    private function downloadInboundMedia(string $mediaId, ?string $mime): ?string
+    {
+        $resolved = $this->whatsapp->resolveMediaUrl($mediaId);
+        if (! $resolved) {
+            return null;
+        }
+
+        $bytes = $this->whatsapp->downloadMedia($resolved['url']);
+        if ($bytes === null) {
+            return null;
+        }
+
+        $ext  = $this->extForMime($mime ?? $resolved['mime'] ?? '');
+        $path = 'whatsapp/in/' . $mediaId . ($ext ? '.' . $ext : '');
+        Storage::disk('public')->put($path, $bytes);
+
+        return Storage::disk('public')->url($path);
+    }
+
+    /** Best-effort extension from a mime type. */
+    private function extForMime(string $mime): string
+    {
+        return match (true) {
+            str_contains($mime, 'jpeg'), str_contains($mime, 'jpg') => 'jpg',
+            str_contains($mime, 'png')   => 'png',
+            str_contains($mime, 'webp')  => 'webp',
+            str_contains($mime, 'gif')   => 'gif',
+            str_contains($mime, 'ogg')   => 'ogg',
+            str_contains($mime, 'mpeg'), str_contains($mime, 'mp3') => 'mp3',
+            str_contains($mime, 'mp4')   => 'mp4',
+            str_contains($mime, 'amr')   => 'amr',
+            str_contains($mime, 'aac')   => 'aac',
+            str_contains($mime, 'pdf')   => 'pdf',
+            default => '',
+        };
     }
 }

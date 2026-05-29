@@ -125,6 +125,147 @@ class WhatsAppService
     }
 
     /**
+     * Send a media message (image / audio / video / document).
+     *
+     * The file is first uploaded to Meta's /media endpoint to obtain a media
+     * id, then referenced by id in the message — keeps our media private
+     * (no public link handed to Meta). `$publicUrl` is OUR own copy used to
+     * render the bubble in the chat UI. Like text, this is subject to the 24h
+     * Customer Service Window.
+     *
+     * @param string $type One of: image|audio|video|document
+     */
+    public function sendMedia(
+        string $toPhone,
+        string $type,
+        string $absolutePath,
+        string $mime,
+        ?string $publicUrl = null,
+        ?string $caption = null,
+        ?string $filename = null,
+        ?string $relatedType = null,
+        ?string $relatedId = null,
+    ): WhatsappMessage {
+        $this->assertConfigured();
+
+        $message = WhatsappMessage::create([
+            'to_phone'       => $this->normalizePhone($toPhone),
+            'from_phone'     => Setting::get('whatsapp.phone_number_id'),
+            'direction'      => 'outbound',
+            'message_type'   => $type,
+            'body'           => $caption,
+            'media_url'      => $publicUrl,
+            'media_mime'     => $mime,
+            'media_filename' => $filename,
+            'status'         => 'queued',
+            'related_type'   => $relatedType,
+            'related_id'     => $relatedId,
+        ]);
+
+        $mediaId = $this->uploadMedia($absolutePath, $mime);
+        if (! $mediaId) {
+            $message->update([
+                'status'        => 'failed',
+                'failed_at'     => now(),
+                'error_message' => 'فشل رفع الملف إلى Meta (تحقق من نوع/حجم الملف).',
+            ]);
+            return $message->fresh();
+        }
+
+        $media = ['id' => $mediaId];
+        if ($type === 'document' && $filename) $media['filename'] = $filename;
+        if (in_array($type, ['image', 'video'], true) && $caption) $media['caption'] = $caption;
+
+        return $this->dispatch($message, [
+            'messaging_product' => 'whatsapp',
+            'to'                => $message->to_phone,
+            'type'              => $type,
+            $type               => $media,
+        ]);
+    }
+
+    /**
+     * Upload a local file to Meta's /media endpoint. Returns the media id
+     * (valid ~30 days) used to send the message, or null on failure.
+     */
+    public function uploadMedia(string $absolutePath, string $mime): ?string
+    {
+        $this->assertConfigured();
+
+        $url = sprintf(
+            '%s/%s/%s/media',
+            self::API_BASE,
+            Setting::get('whatsapp.api_version', 'v18.0'),
+            Setting::get('whatsapp.phone_number_id'),
+        );
+
+        try {
+            $response = Http::withToken(Setting::get('whatsapp.access_token'))
+                ->timeout(60)
+                ->attach('file', file_get_contents($absolutePath), basename($absolutePath), ['Content-Type' => $mime])
+                ->post($url, [
+                    'messaging_product' => 'whatsapp',
+                    'type'              => $mime,
+                ]);
+
+            if ($response->successful()) {
+                return $response->json('id');
+            }
+
+            Log::channel('single')->warning('WhatsApp media upload failed', [
+                'http'  => $response->status(),
+                'error' => $response->json('error', $response->body()),
+            ]);
+        } catch (Throwable $e) {
+            Log::channel('single')->error('WhatsApp media upload error', ['error' => $e->getMessage()]);
+        }
+
+        return null;
+    }
+
+    /**
+     * Resolve an inbound media id to its temporary download URL + mime.
+     * Meta media URLs are short-lived and require the bearer token to fetch.
+     *
+     * @return array{url:string,mime:?string}|null
+     */
+    public function resolveMediaUrl(string $mediaId): ?array
+    {
+        $this->assertConfigured();
+
+        $url = sprintf('%s/%s/%s', self::API_BASE, Setting::get('whatsapp.api_version', 'v18.0'), $mediaId);
+
+        try {
+            $response = Http::withToken(Setting::get('whatsapp.access_token'))
+                ->acceptJson()->timeout(30)->get($url);
+
+            if ($response->successful() && $response->json('url')) {
+                return ['url' => $response->json('url'), 'mime' => $response->json('mime_type')];
+            }
+        } catch (Throwable $e) {
+            Log::channel('single')->error('WhatsApp media resolve error', ['id' => $mediaId, 'error' => $e->getMessage()]);
+        }
+
+        return null;
+    }
+
+    /** Download raw bytes from a (token-protected) Meta media URL. */
+    public function downloadMedia(string $mediaUrl): ?string
+    {
+        $this->assertConfigured();
+
+        try {
+            $response = Http::withToken(Setting::get('whatsapp.access_token'))
+                ->timeout(60)->get($mediaUrl);
+
+            return $response->successful() ? $response->body() : null;
+        } catch (Throwable $e) {
+            Log::channel('single')->error('WhatsApp media download error', ['error' => $e->getMessage()]);
+            return null;
+        }
+    }
+
+    /**
      * Update an inbound or outbound message's status from a webhook callback.
      * Called by WhatsAppMessageController::webhook().
      */

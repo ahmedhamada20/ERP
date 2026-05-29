@@ -95,8 +95,11 @@
                 </a>
                 @endcan
                 @can('whatsapp.view_logs')
+                <a href="{{ route('admin.crm.whatsapp.chat.index') }}" class="{{ request()->routeIs('admin.crm.whatsapp.chat.*') ? 'active' : '' }}">
+                    <span><i class="menu-icon bi bi-whatsapp"></i> محادثات WhatsApp</span>
+                </a>
                 <a href="{{ route('admin.crm.whatsapp.messages.index') }}" class="{{ request()->routeIs('admin.crm.whatsapp.messages.*') ? 'active' : '' }}">
-                    <span><i class="menu-icon bi bi-whatsapp"></i> رسائل WhatsApp</span>
+                    <span><i class="menu-icon bi bi-list-ul"></i> سجل الرسائل</span>
                 </a>
                 @endcan
                 @can('whatsapp.manage_settings')
