@@ -61,7 +61,7 @@
                         <label class="form-label">متغيرات القالب <span class="text-muted small">(عدد المتغيرات حسب القالب)</span></label>
                         <div id="waTemplateParams">
                             <div class="input-group mb-2">
-                                <span class="input-group-text">{{ '{{1}}' }}</span>
+                                <span class="input-group-text">@{{1}}</span>
                                 <input type="text" class="form-control wa-tpl-param" placeholder="القيمة الأولى">
                             </div>
                         </div>
