@@ -14,7 +14,10 @@ use App\Observers\DomesticBookingPaymentObserver;
 use App\Observers\LeadObserver;
 use App\Observers\OpportunityObserver;
 use App\Observers\ReligiousBookingObserver;
+use Illuminate\Database\Events\MigrationsEnded;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -50,5 +53,17 @@ class AppServiceProvider extends ServiceProvider
         // (closes the gap where API/console mutations left stale stats).
         Lead::observe(LeadObserver::class);
         Opportunity::observe(OpportunityObserver::class);
+
+        // After any migration batch (i.e. every deploy that runs `migrate`),
+        // heal the sequences table so it never falls behind the real data —
+        // prevents the "Duplicate entry" booking-number errors after a restore.
+        // Skipped during the test suite to keep migration setup quiet/fast.
+        Event::listen(MigrationsEnded::class, function () {
+            if (app()->runningUnitTests()) {
+                return;
+            }
+
+            Artisan::call('sequences:sync');
+        });
     }
 }
