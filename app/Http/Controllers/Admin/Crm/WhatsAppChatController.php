@@ -212,7 +212,7 @@ class WhatsAppChatController extends Controller
                 foreach ($cols as $c) {
                     $t = $this->tail((string) ($r->{$c} ?? ''));
                     if ($t !== '' && isset($tails[$t]) && ! isset($map[$tails[$t]])) {
-                        $map[$tails[$t]] = $r->name;
+                        $map[$tails[$t]] = $r->full_name;
                     }
                 }
             }
