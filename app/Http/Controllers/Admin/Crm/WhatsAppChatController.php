@@ -226,7 +226,7 @@ class WhatsAppChatController extends Controller
             }
         };
         $scan(
-            Customer::query()->select('name', 'phone', 'mobile', 'whatsapp')->where($custWhere)->limit(500)->get(),
+            Customer::query()->select('full_name', 'phone', 'mobile', 'whatsapp')->where($custWhere)->limit(500)->get(),
             ['phone', 'mobile', 'whatsapp']
         );
 
@@ -237,7 +237,7 @@ class WhatsAppChatController extends Controller
             }
         };
         $scan(
-            Lead::query()->select('name', 'phone', 'whatsapp')->where($leadWhere)->limit(500)->get(),
+            Lead::query()->select('full_name', 'phone', 'whatsapp')->where($leadWhere)->limit(500)->get(),
             ['phone', 'whatsapp']
         );
 
